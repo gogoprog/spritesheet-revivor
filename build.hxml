@@ -1,0 +1,5 @@
+-cp src
+-lib haxeui-core
+-lib haxeui-html5
+-js build/main.js
+-main revivor.Main
