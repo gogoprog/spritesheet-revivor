@@ -94,7 +94,7 @@ class Generator {
                         return;
                         // continue;
                     } else {
-                        debugDraw(data, rect.left, rect.top);
+                        // debugDraw(data, rect.left, rect.top);
                         rects.push(rect);
                         return;
                     }

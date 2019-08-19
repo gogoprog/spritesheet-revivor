@@ -5,6 +5,9 @@ import haxe.ui.containers.*;
 import haxe.ui.core.Screen;
 import haxe.ui.Toolkit;
 import haxe.ui.ToolkitAssets;
+import haxe.ui.HaxeUIApp;
+import haxe.ui.core.Component;
+import haxe.ui.macros.ComponentMacros;
 import js.Browser.document;
 
 class Main {
@@ -13,6 +16,7 @@ class Main {
     public var frames:Array<Frame> = [];
     public var selectedFrame:Frame = null;
     public var exporter:Exporter = new ExporterJson();
+    public var imageCanvas:js.html.CanvasElement;
 
     static function main() {
         new Main();
@@ -20,46 +24,27 @@ class Main {
 
     public function new() {
         Toolkit.init();
-        var vbox = new VBox();
-        {
-            var hbox = new HBox();
-            var button = new Button();
-            button.text = "Open";
+        Toolkit.theme = "native";
+        var app = new HaxeUIApp();
+        app.ready(function() {
+            var main:Component = ComponentMacros.buildComponent("assets/main.xml");
+            app.addComponent(main);
+            image = main.findComponent("image");
+            var imageView:ScrollView = main.findComponent("imageView", null, true);
+            imageView.onClick = onImageClick;
+            var button:Button = main.findComponent("importButton", null, true);
             button.onClick = function(m) {
                 open();
             };
-            hbox.addComponent(button);
-            var button = new Button();
-            button.text = "Generate";
+            var button:Button = main.findComponent("demoButton", null, true);
             button.onClick = function(m) {
-                generate();
+                openFile("../test/megaman.png");
             };
-            hbox.addComponent(button);
-            vbox.addComponent(hbox);
-        }
-        {
-            var hbox = new HBox();
-            image = new Image();
-            image.resource = "../test/megaman.png";
-            var imageView = new ScrollView();
-            imageView.addComponent(image);
-            imageView.onClick = onImageClick;
-            imageView.height = 512;
-            imageView.width = 512;
-            hbox.addComponent(imageView);
-            var scroll = new ScrollView();
-            hbox.addComponent(scroll);
-            output = new TextArea();
-            output.width = 400;
-            output.height = 400;
-            // output.style.fontSize = 10;
-            hbox.addComponent(output);
-            vbox.addComponent(hbox);
-        }
-        Screen.instance.addComponent(vbox);
-        {
-            document.getElementById('input').addEventListener('change', onFileOpen, false);
-        }
+            output = main.findComponent("output", null, true);
+            output.disabled = true;
+            app.start();
+        });
+        document.getElementById('input').addEventListener('change', onFileOpen, false);
     }
 
     public function open() {
@@ -72,16 +57,25 @@ class Main {
         var reader = new js.html.FileReader();
         reader.onload = (function(theFile) {
             return function(e) {
-                image.resource = e.target.result;
+                openFile(e.target.result);
             };
         })(f);
         reader.readAsDataURL(f);
+    }
+
+    private function openFile(filePath) {
+        image.resource = filePath;
+        var e = image.element.firstElementChild;
+        var img:js.html.ImageElement = cast e;
+        img.style.visibility = "visible";
+        haxe.Timer.delay(generate, 100);
     }
 
     private function generate() {
         var e = image.element.firstElementChild;
         var img:js.html.ImageElement = cast e;
         var canvas:Dynamic = document.createElement("canvas");
+        imageCanvas = canvas;
         canvas.width = img.width;
         canvas.height = img.height;
         var ctx:js.html.CanvasRenderingContext2D = canvas.getContext("2d");
@@ -89,25 +83,58 @@ class Main {
         var generator = new Generator(ctx, frames);
         generator.process();
         output.text = exporter.export(frames);
+        img.style.visibility = "hidden";
+        image.element.appendChild(canvas);
+        drawQuads();
+    }
+
+    private function drawCanvas() {
+        var canvas = imageCanvas;
+        var e = image.element.firstElementChild;
+        var img:js.html.ImageElement = cast e;
+        var ctx:js.html.CanvasRenderingContext2D = canvas.getContext("2d");
+        ctx.clearRect(0, 0, img.width, img.height);
+        ctx.drawImage(img, 0, 0);
     }
 
     private function onImageClick(e:haxe.ui.core.MouseEvent) {
         var container = e.target;
         var x = e.screenX - container.screenLeft;
         var y = e.screenY - container.screenTop;
-
         var index = 0;
+
         for(frame in frames) {
             var rect = frame.rect;
 
             if(x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
-                selectedFrame = frame;
-                trace(frame);
-                trace("frame" + index);
+                selectFrame(frame);
                 break;
             }
 
             index++;
         }
+    }
+
+    private function drawQuads() {
+        var ctx = imageCanvas.getContext2d();
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = "#AAAAAA";
+        ctx.setLineDash([5, 3]);
+
+        for(frame in frames) {
+            var rect = frame.rect;
+            ctx.strokeRect(rect.left, rect.top, rect.width, rect.height);
+        }
+    }
+
+    private function selectFrame(frame:Frame) {
+        drawCanvas();
+        drawQuads();
+        selectedFrame = frame;
+        var ctx = imageCanvas.getContext2d();
+        ctx.strokeStyle = "#000000";
+        var rect = frame.rect;
+        ctx.strokeRect(rect.left, rect.top, rect.width, rect.height);
     }
 }
