@@ -1,0 +1,27 @@
+#main {
+  border: 1px solid #CCCCCC;
+  background-color: #DDD;
+  padding: 0;
+  margin: 0;
+}
+
+.title {
+  font-size: 30px;
+}
+
+.big-button {
+  margin-bottom: 5px;
+  font-size: 30px;
+}
+
+.centered {
+  horizontal-align: center;
+}
+
+scrollView {
+  background-color: white;
+}
+
+#output {
+  font-size: 8px;
+}
