@@ -41,7 +41,7 @@ class Main {
                 openFile("../test/megaman.png");
             };
             output = main.findComponent("output", null, true);
-            output.disabled = true;
+            cast(output.element, js.html.TextAreaElement).readOnly = true;
             app.start();
         });
         document.getElementById('input').addEventListener('change', onFileOpen, false);
