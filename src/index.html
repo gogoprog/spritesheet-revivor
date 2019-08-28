@@ -9,10 +9,18 @@
     body {
       overflow: auto !important;
     }
+
+    a.gh {
+      z-index: 1000;
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
   </style>
 </head>
 
 <body>
+  <a class="gh" href="https://github.com/gogoprog/spritesheet-revivor"><img width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_darkblue_121621.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
   <input type="file" id="input" style="opacity:0;">
   <canvas id="debug" width="512" height="512" style="position:absolute; bottom:0; border:1px solid red; display:none;"></canvas>
   <script src="../build/main.js"></script>
