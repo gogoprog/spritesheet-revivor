@@ -13,7 +13,10 @@
   </hbox>
   <hbox styleNames="centered">
     <vbox width="512">
-      <label styleNames="title">2. Check frames</label>
+      <hbox>
+        <label styleNames="title">1. Check frames</label>
+        <button id="pickBGButton" styleNames="big-button" text="Pick BG"/>
+      </hbox>
       <scrollView height="512" width="512" id="imageView">
         <image resource="haxeui-core/styles/default/haxeui.png" id="image"/>
       </scrollView>

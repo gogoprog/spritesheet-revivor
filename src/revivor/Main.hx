@@ -11,12 +11,14 @@ import haxe.ui.macros.ComponentMacros;
 import js.Browser.document;
 
 class Main {
-    public var image:Image;
-    public var output:TextArea;
-    public var frames:Array<Frame> = [];
-    public var selectedFrame:Frame = null;
-    public var exporter:Exporter = new ExporterJson();
-    public var imageCanvas:js.html.CanvasElement;
+    private var image:Image;
+    private var output:TextArea;
+    private var frames:Array<Frame> = [];
+    private var selectedFrame:Frame = null;
+    private var exporter:Exporter = new ExporterJson();
+    private var imageCanvas:js.html.CanvasElement;
+    private var pickingBackground:Bool = false;
+    private var backgroundColor:Array<Int> = [ 0, 0, 0, 0 ];
 
     static function main() {
         new Main();
@@ -39,6 +41,10 @@ class Main {
             var button:Button = main.findComponent("demoButton", null, true);
             button.onClick = function(m) {
                 openFile("../test/megaman.png");
+            };
+            var button:Button = main.findComponent("pickBGButton", null, true);
+            button.onClick = function(m) {
+                pickingBackground = true;
             };
             output = main.findComponent("output", null, true);
             output.disabled = true;
@@ -80,7 +86,7 @@ class Main {
         canvas.height = img.height;
         var ctx:js.html.CanvasRenderingContext2D = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
-        var generator = new Generator(ctx, frames);
+        var generator = new Generator(ctx, frames, backgroundColor);
         generator.process();
         output.text = exporter.export(frames);
         img.style.visibility = "hidden";
@@ -101,17 +107,27 @@ class Main {
         var container = e.target;
         var x = e.screenX - container.screenLeft;
         var y = e.screenY - container.screenTop;
-        var index = 0;
 
-        for(frame in frames) {
-            var rect = frame.rect;
+        if(pickingBackground) {
+            var imageData = imageCanvas.getContext2d().getImageData(x, y, 1, 1);
+            var data = imageData.data;
+            backgroundColor[0] = data[0];
+            backgroundColor[1] = data[1];
+            backgroundColor[2] = data[2];
+            backgroundColor[3] = data[3];
+        } else {
+            var index = 0;
 
-            if(x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
-                selectFrame(frame);
-                break;
+            for(frame in frames) {
+                var rect = frame.rect;
+
+                if(x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+                    selectFrame(frame);
+                    break;
+                }
+
+                index++;
             }
-
-            index++;
         }
     }
 

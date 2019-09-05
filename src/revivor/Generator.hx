@@ -7,10 +7,12 @@ class Generator {
     var ctx:js.html.CanvasRenderingContext2D;
     var results:Array<Frame>;
     var rects:Array<Rectangle>;
+    var backgroundColor:Array<Int>;
 
-    public function new(ctx, results) {
+    public function new(ctx, results, bgcolor) {
         this.ctx = ctx;
         this.results = results;
+        this.backgroundColor = bgcolor;
     }
 
     public function process() {
@@ -47,7 +49,7 @@ class Generator {
             for(i in 0...w) {
                 var p = i * 4;
 
-                if(!isZero(data.data, p)) {
+                if(!isBackground(data.data, p)) {
                     rect.top--;
                     rect.height++;
                     found = false;
@@ -58,7 +60,7 @@ class Generator {
             for(i in 0...w) {
                 var p = (w * (h - 1) * 4) + i * 4;
 
-                if(!isZero(data.data, p)) {
+                if(!isBackground(data.data, p)) {
                     rect.height++;
                     found = false;
                     break;
@@ -68,7 +70,7 @@ class Generator {
             for(i in 0...h) {
                 var p = w * i * 4;
 
-                if(!isZero(data.data, p)) {
+                if(!isBackground(data.data, p)) {
                     rect.left--;
                     rect.width++;
                     found = false;
@@ -79,7 +81,7 @@ class Generator {
             for(i in 0...h) {
                 var p = w * i * 4 + (w - 1) * 4;
 
-                if(!isZero(data.data, p)) {
+                if(!isBackground(data.data, p)) {
                     rect.width++;
                     found = false;
                     break;
@@ -90,7 +92,7 @@ class Generator {
 
             if(found) {
                 if(!overlap(rect)) {
-                    if(isFullZero(data)) {
+                    if(isFullBackground(data)) {
                         return;
                         // continue;
                     } else {
@@ -105,18 +107,18 @@ class Generator {
         }
     }
 
-    inline function isZero(data:Dynamic, p) {
+    inline function isBackground(data:Dynamic, p) {
         return !data[p] && !data[p + 1] && !data[p + 2] && !data[p + 3];
     }
 
-    function isFullZero(data:js.html.ImageData) {
+    function isFullBackground(data:js.html.ImageData) {
         var w = data.width;
 
         for(y in 0...data.height) {
             for(x in 0...data.width) {
                 var p = (w * y * 4) + x * 4;
 
-                if(!isZero(data.data, p)) {
+                if(!isBackground(data.data, p)) {
                     return false;
                 }
             }
