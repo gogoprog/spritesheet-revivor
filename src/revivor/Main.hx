@@ -18,6 +18,7 @@ class Main {
     private var exporter:Exporter = new ExporterJson();
     private var imageCanvas:js.html.CanvasElement;
     private var pickingBackground:Bool = false;
+    private var pickBGButton:Button;
     private var backgroundColor:Array<Int> = [ 0, 0, 0, 0 ];
 
     static function main() {
@@ -43,6 +44,7 @@ class Main {
                 openFile("../test/megaman.png");
             };
             var button:Button = main.findComponent("pickBGButton", null, true);
+            pickBGButton = button;
             button.onClick = function(m) {
                 pickingBackground = true;
             };
@@ -123,6 +125,10 @@ class Main {
             backgroundColor[1] = data[1];
             backgroundColor[2] = data[2];
             backgroundColor[3] = data[3];
+            pickBGButton.element.style.backgroundColor = Util.getColorString(data[0], data[1], data[2], data[3]);
+            pickBGButton.element.style.color = Util.getColorString(255 - data[0], 255 - data[1], 255 - data[2], 255);
+
+            generate();
         } else {
             var index = 0;
 
