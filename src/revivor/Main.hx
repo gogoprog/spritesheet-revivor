@@ -47,7 +47,7 @@ class Main {
                 pickingBackground = true;
             };
             output = main.findComponent("output", null, true);
-            output.disabled = true;
+            cast(output.element, js.html.TextAreaElement).readOnly = true;
             app.start();
         });
         document.getElementById('input').addEventListener('change', onFileOpen, false);
@@ -73,14 +73,22 @@ class Main {
         image.resource = filePath;
         var e = image.element.firstElementChild;
         var img:js.html.ImageElement = cast e;
+        img.onload = function(e) { generate(); };
         img.style.visibility = "visible";
-        haxe.Timer.delay(generate, 100);
     }
 
     private function generate() {
         var e = image.element.firstElementChild;
         var img:js.html.ImageElement = cast e;
-        var canvas:Dynamic = document.createElement("canvas");
+        var canvas:Dynamic;
+        frames = [];
+
+        if(imageCanvas == null) {
+            canvas = document.createElement("canvas");
+        } else {
+            canvas = imageCanvas;
+        }
+
         imageCanvas = canvas;
         canvas.width = img.width;
         canvas.height = img.height;

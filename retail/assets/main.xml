@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vbox id="main" width="100%" height="925">
+  <style source="/main.css"/>
+  <hbox styleNames="centered">
+    <vbox width="512">
+      <hbox>
+        <label styleNames="title">1. Import file</label>
+        <button id="importButton" styleNames="big-button" text="Upload"/>
+        <label styleNames="title">or</label>
+        <button id="demoButton" styleNames="big-button" text="Sample"/>
+      </hbox>
+    </vbox>
+  </hbox>
+  <hbox styleNames="centered">
+    <vbox width="512">
+      <label styleNames="title">2. Check frames</label>
+      <scrollView height="512" width="512" id="imageView">
+        <image resource="haxeui-core/styles/default/haxeui.png" id="image"/>
+      </scrollView>
+    </vbox>
+  </hbox>
+  <hbox styleNames="centered">
+    <vbox width="512">
+      <label styleNames="title">3. Get output</label>
+      <textArea width="512" height="256" id="output">
+      </textArea>
+    </vbox>
+  </hbox>
+</vbox>
