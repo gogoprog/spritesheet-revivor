@@ -108,7 +108,7 @@ class Generator {
     }
 
     inline function isBackground(data:Dynamic, p) {
-        return !data[p] && !data[p + 1] && !data[p + 2] && !data[p + 3];
+        return data[p] == backgroundColor[0] && data[p + 1] == backgroundColor[1] && data[p + 2] == backgroundColor[2] && data[p + 3] == backgroundColor[3];
     }
 
     function isFullBackground(data:js.html.ImageData) {
