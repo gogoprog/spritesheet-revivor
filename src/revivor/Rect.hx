@@ -16,11 +16,11 @@ class Rect {
         height = h;
     }
 
-    public function get_right():Int {
+    inline public function get_right():Int {
         return left + width;
     }
 
-    public function get_bottom():Int {
+    inline public function get_bottom():Int {
         return top + height;
     }
 }

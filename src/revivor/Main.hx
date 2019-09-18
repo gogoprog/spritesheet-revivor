@@ -77,11 +77,11 @@ class Main {
         image.resource = filePath;
         var e = image.element.firstElementChild;
         var img:js.html.ImageElement = cast e;
-        img.onload = function(e) { generate(); };
+        img.onload = function(e) { setup(); pickBGFromPixel(0, 0); generate(); };
         img.style.visibility = "visible";
     }
 
-    private function generate() {
+    private function setup() {
         var e = image.element.firstElementChild;
         var img:js.html.ImageElement = cast e;
         var canvas:Dynamic;
@@ -98,7 +98,11 @@ class Main {
         canvas.height = img.height;
         var ctx:js.html.CanvasRenderingContext2D = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
-        var fullData = ctx.getImageData(0, 0, img.width, img.height);
+    }
+
+    private function generate() {
+        var ctx:js.html.CanvasRenderingContext2D = imageCanvas.getContext("2d");
+        var fullData = ctx.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
         setupWorker();
         worker.postMessage({imageData: fullData, backgroundColor:backgroundColor});
     }
@@ -118,20 +122,13 @@ class Main {
         var y = e.screenY - container.screenTop;
 
         if(pickingBackground) {
-            var imageData = imageCanvas.getContext2d().getImageData(x, y, 1, 1);
-            var data = imageData.data;
-            backgroundColor[0] = data[0];
-            backgroundColor[1] = data[1];
-            backgroundColor[2] = data[2];
-            backgroundColor[3] = data[3];
-            pickBGButton.element.style.backgroundColor = Util.getColorString(data[0], data[1], data[2], data[3]);
-            pickBGButton.element.style.color = Util.getColorString(255 - data[0], 255 - data[1], 255 - data[2], 255);
+            pickBGFromPixel(x, y);
             generate();
         } else {
             var index = 0;
 
             for(frame in frames) {
-                var rect = frame.rect;
+                var rect:Rect = frame.rect;
 
                 if(x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
                     selectFrame(frame);
@@ -141,6 +138,17 @@ class Main {
                 index++;
             }
         }
+    }
+
+    private function pickBGFromPixel(x, y) {
+        var imageData = imageCanvas.getContext2d().getImageData(x, y, 1, 1);
+        var data = imageData.data;
+        backgroundColor[0] = data[0];
+        backgroundColor[1] = data[1];
+        backgroundColor[2] = data[2];
+        backgroundColor[3] = data[3];
+        pickBGButton.element.style.backgroundColor = Util.getColorString(data[0], data[1], data[2], data[3]);
+        pickBGButton.element.style.color = Util.getColorString(255 - data[0], 255 - data[1], 255 - data[2], 255);
     }
 
     private function drawQuads() {

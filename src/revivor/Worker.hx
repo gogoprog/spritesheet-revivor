@@ -13,8 +13,6 @@ class Worker {
     }
 
     private function onMessage(e) {
-        trace("worker received: ");
-        trace(e.data);
         var generator = new Generator(e.data.imageData, e.data.backgroundColor);
         generator.process(function(frames) {
             workerScope.postMessage(frames);
