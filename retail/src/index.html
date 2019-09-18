@@ -16,6 +16,21 @@
       right: 0;
       top: 0;
     }
+
+    .loading {
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-color: gray;
+      background-image: url("../assets/loading.gif");
+      opacity:0.5;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      top:0;
+      left:0;
+      display: none;
+    }
   </style>
 </head>
 
@@ -24,6 +39,7 @@
   <input type="file" id="input" style="opacity:0;">
   <canvas id="debug" width="512" height="512" style="position:absolute; bottom:0; border:1px solid red; display:none;"></canvas>
   <script src="../build/main.js"></script>
+  <div id="loading" class="loading"></div>
 </body>
 
 </html>
