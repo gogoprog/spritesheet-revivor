@@ -1,40 +1,72 @@
 package revivor;
 
-import haxe.ui.util.Rectangle;
 import js.Browser.document;
 
-class Generator {
-    var ctx:js.html.CanvasRenderingContext2D;
-    var results:Array<Frame>;
-    var rects:Array<Rectangle>;
-    var backgroundColor:Array<Int>;
+class SubImageData {
+    private var imageData:js.html.ImageData;
+    private var startX:Int;
+    private var startY:Int;
+    public var width:Int;
+    public var height:Int;
 
-    public function new(ctx, results, bgcolor) {
-        this.ctx = ctx;
-        this.results = results;
+    public function new(imageData, ox, oy, w, h) {
+        this.imageData = imageData;
+        startX = ox;
+        startY = oy;
+        width = w;
+        height = h;
+    }
+
+    inline public function isSamePixelColor(color:Array<Int>, x, y) {
+        var p = (imageData.width * (startY + y) + startX + x) * 4;
+        var d = imageData.data;
+        return d[p] == color[0] && d[p + 1] == color[1] && d[p + 2] == color[2] && d[p + 3] == color[3];
+    }
+}
+
+class Generator {
+    var imageData:js.html.ImageData;
+    var results:Array<Frame>;
+    var rects:Array<Rect>;
+    var backgroundColor:Array<Int>;
+    var onComplete:Array<Frame>->Void;
+    var abort:Bool = false;
+
+    public function new(imageData, bgcolor) {
+        this.imageData = imageData;
         this.backgroundColor = bgcolor;
     }
 
-    public function process() {
+    public function process(onComplete:Array<Frame>->Void) {
         rects = [];
+        results = [];
+        this.onComplete = onComplete;
 
-        for(y in 0...ctx.canvas.height) {
-            for(x in 0...ctx.canvas.width) {
+        for(y in 0...imageData.height) {
+            for(x in 0...imageData.width) {
                 processFrom(x, y);
             }
         }
 
-        // :TODO: Sort?
+        end();
+    }
 
+    public function cancel() {
+        abort = true;
+    }
+
+    function end() {
         for(rect in rects) {
             var f = new Frame(rect);
             results.push(f);
         }
+
+        onComplete(results);
     }
 
     function processFrom(x, y) {
         var it = 0;
-        var rect = new Rectangle(x, y, 2, 2);
+        var rect = new Rect(x, y, 2, 2);
 
         if(overlap(rect)) {
             return;
@@ -43,13 +75,11 @@ class Generator {
         while(it < 100) {
             var w:Int = cast rect.width;
             var h:Int = cast rect.height;
-            var data = ctx.getImageData(rect.left, rect.top, w, h);
+            var subData = new SubImageData(imageData, cast rect.left, cast rect.top, w, h);
             var found = true;
 
             for(i in 0...w) {
-                var p = i * 4;
-
-                if(!isBackground(data.data, p)) {
+                if(!subData.isSamePixelColor(backgroundColor, i, 0)) {
                     rect.top--;
                     rect.height++;
                     found = false;
@@ -58,9 +88,7 @@ class Generator {
             }
 
             for(i in 0...w) {
-                var p = (w * (h - 1) * 4) + i * 4;
-
-                if(!isBackground(data.data, p)) {
+                if(!subData.isSamePixelColor(backgroundColor, i, h - 1)) {
                     rect.height++;
                     found = false;
                     break;
@@ -68,9 +96,7 @@ class Generator {
             }
 
             for(i in 0...h) {
-                var p = w * i * 4;
-
-                if(!isBackground(data.data, p)) {
+                if(!subData.isSamePixelColor(backgroundColor, 0, i)) {
                     rect.left--;
                     rect.width++;
                     found = false;
@@ -79,9 +105,7 @@ class Generator {
             }
 
             for(i in 0...h) {
-                var p = w * i * 4 + (w - 1) * 4;
-
-                if(!isBackground(data.data, p)) {
+                if(!subData.isSamePixelColor(backgroundColor, w - 1, i)) {
                     rect.width++;
                     found = false;
                     break;
@@ -92,11 +116,9 @@ class Generator {
 
             if(found) {
                 if(!overlap(rect)) {
-                    if(isFullBackground(data)) {
+                    if(isFullBackground(subData)) {
                         return;
-                        // continue;
                     } else {
-                        // debugDraw(data, rect.left, rect.top);
                         rects.push(rect);
                         return;
                     }
@@ -108,17 +130,13 @@ class Generator {
     }
 
     inline function isBackground(data:Dynamic, p) {
-        return !data[p] && !data[p + 1] && !data[p + 2] && !data[p + 3];
+        return data[p] == backgroundColor[0] && data[p + 1] == backgroundColor[1] && data[p + 2] == backgroundColor[2] && data[p + 3] == backgroundColor[3];
     }
 
-    function isFullBackground(data:js.html.ImageData) {
-        var w = data.width;
-
+    function isFullBackground(data:SubImageData) {
         for(y in 0...data.height) {
             for(x in 0...data.width) {
-                var p = (w * y * 4) + x * 4;
-
-                if(!isBackground(data.data, p)) {
+                if(!data.isSamePixelColor(backgroundColor, x, y)) {
                     return false;
                 }
             }
@@ -127,7 +145,7 @@ class Generator {
         return true;
     }
 
-    function overlap(rect:Rectangle):Bool {
+    function overlap(rect:Rect):Bool {
         for(other in rects) {
             if(rect.left > other.right || other.left > rect.right) {
                 continue;

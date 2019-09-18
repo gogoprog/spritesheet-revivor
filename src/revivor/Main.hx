@@ -20,6 +20,7 @@ class Main {
     private var pickingBackground:Bool = false;
     private var pickBGButton:Button;
     private var backgroundColor:Array<Int> = [ 0, 0, 0, 0 ];
+    private var worker:js.html.Worker;
 
     static function main() {
         new Main();
@@ -47,6 +48,7 @@ class Main {
             pickBGButton = button;
             button.onClick = function(m) {
                 pickingBackground = true;
+                stopWorker();
             };
             output = main.findComponent("output", null, true);
             cast(output.element, js.html.TextAreaElement).readOnly = true;
@@ -96,12 +98,9 @@ class Main {
         canvas.height = img.height;
         var ctx:js.html.CanvasRenderingContext2D = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
-        var generator = new Generator(ctx, frames, backgroundColor);
-        generator.process();
-        output.text = exporter.export(frames);
-        img.style.visibility = "hidden";
-        image.element.appendChild(canvas);
-        drawQuads();
+        var fullData = ctx.getImageData(0, 0, img.width, img.height);
+        setupWorker();
+        worker.postMessage({imageData: fullData, backgroundColor:backgroundColor});
     }
 
     private function drawCanvas() {
@@ -127,7 +126,6 @@ class Main {
             backgroundColor[3] = data[3];
             pickBGButton.element.style.backgroundColor = Util.getColorString(data[0], data[1], data[2], data[3]);
             pickBGButton.element.style.color = Util.getColorString(255 - data[0], 255 - data[1], 255 - data[2], 255);
-
             generate();
         } else {
             var index = 0;
@@ -166,5 +164,28 @@ class Main {
         ctx.strokeStyle = "#000000";
         var rect = frame.rect;
         ctx.strokeRect(rect.left, rect.top, rect.width, rect.height);
+    }
+
+    private function setupWorker() {
+        var e = image.element.firstElementChild;
+        var img:js.html.ImageElement = cast e;
+        worker = new js.html.Worker("../build/worker.js");
+        worker.onmessage = function(e) {
+            frames = e.data;
+            output.text = exporter.export(frames);
+            img.style.visibility = "hidden";
+            image.element.appendChild(imageCanvas);
+            drawQuads();
+            document.getElementById("loading").style.display = "none";
+        };
+        document.getElementById("loading").style.display = "block";
+    }
+
+    private function stopWorker() {
+        if(worker != null) {
+            worker.terminate();
+        }
+
+        document.getElementById("loading").style.display = "none";
     }
 }

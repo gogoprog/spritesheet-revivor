@@ -3,3 +3,10 @@
 -lib haxeui-html5
 -js build/main.js
 -main revivor.Main
+
+--next
+
+-cp src
+-js build/worker.js
+-main revivor.Worker
+
