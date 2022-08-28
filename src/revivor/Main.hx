@@ -1,17 +1,22 @@
 package revivor;
 
-import haxe.ui.components.*;
-import haxe.ui.containers.*;
+import haxe.ui.components.Image;
+import haxe.ui.components.Label;
+import haxe.ui.components.TextArea;
+import haxe.ui.components.Button;
+import haxe.ui.containers.ScrollView;
 import haxe.ui.core.Screen;
 import haxe.ui.Toolkit;
 import haxe.ui.ToolkitAssets;
 import haxe.ui.HaxeUIApp;
 import haxe.ui.core.Component;
 import haxe.ui.macros.ComponentMacros;
+import haxe.ui.events.MouseEvent;
 import js.Browser.document;
 
 class Main {
     private var image:Image;
+    private var label:Label;
     private var output:TextArea;
     private var frames:Array<Frame> = [];
     private var selectedFrame:Frame = null;
@@ -34,8 +39,10 @@ class Main {
             var main:Component = ComponentMacros.buildComponent("assets/main.xml");
             app.addComponent(main);
             image = main.findComponent("image");
+            label = main.findComponent("label");
             var imageView:ScrollView = main.findComponent("imageView", null, true);
             imageView.onClick = onImageClick;
+            imageView.registerEvent(MouseEvent.MOUSE_MOVE, onImageMouseMove);
             var button:Button = main.findComponent("importButton", null, true);
             button.onClick = function(m) {
                 open();
@@ -51,7 +58,7 @@ class Main {
                 stopWorker();
             };
             output = main.findComponent("output", null, true);
-            cast(output.element, js.html.TextAreaElement).readOnly = true;
+            /* cast(output.element, js.html.TextAreaElement).readOnly = true; */
             app.start();
         });
         document.getElementById('input').addEventListener('change', onFileOpen, false);
@@ -74,11 +81,11 @@ class Main {
     }
 
     private function openFile(filePath) {
-        image.resource = filePath;
         var e = image.element.firstElementChild;
         var img:js.html.ImageElement = cast e;
         img.onload = function(e) { setup(); pickBGFromPixel(0, 0); generate(); };
         img.style.visibility = "visible";
+        image.resource = filePath;
     }
 
     private function setup() {
@@ -116,7 +123,7 @@ class Main {
         ctx.drawImage(img, 0, 0);
     }
 
-    private function onImageClick(e:haxe.ui.core.MouseEvent) {
+    private function onImageClick(e:haxe.ui.events.MouseEvent) {
         var container = e.target;
         var x = e.screenX - container.screenLeft;
         var y = e.screenY - container.screenTop;
@@ -132,12 +139,32 @@ class Main {
 
                 if(x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
                     selectFrame(frame);
+                    trace('Selected frame ${index}');
                     break;
                 }
 
                 index++;
             }
         }
+    }
+    private function onImageMouseMove(e:haxe.ui.events.MouseEvent) {
+        var container = e.target;
+        var x = e.screenX - container.screenLeft;
+        var y = e.screenY - container.screenTop;
+        var index = 0;
+
+        for(frame in frames) {
+            var rect:Rect = frame.rect;
+
+            if(x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+                label.text = 'frame${index}';
+                return;
+            }
+
+            index++;
+        }
+
+        label.text = '';
     }
 
     private function pickBGFromPixel(x, y) {

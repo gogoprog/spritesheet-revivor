@@ -17,6 +17,7 @@
         <label styleNames="title">2. Check frames</label>
         <button id="pickBGButton" styleNames="big-button" text="Pick BG"/>
       </hbox>
+      <label text="" id="label"/>
       <scrollView height="512" width="512" id="imageView">
         <image resource="haxeui-core/styles/default/haxeui.png" id="image"/>
       </scrollView>
